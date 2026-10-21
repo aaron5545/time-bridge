@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time Bridge</title>
+<style>
+:root{
+  --bg:#eef0f4; --card:#ffffff; --ink:#1c2233; --line:#e3e6ec; --call:#3fae7a;
+  --font:-apple-system,"Segoe UI",system-ui,Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#14161c;--card:#1d2029;--ink:#eef0f6;--line:#2e323e;--call:#4cc18b;color-scheme:dark}
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);
+  display:flex;align-items:center;justify-content:center;padding:12px}
+.card{width:100%;max-width:300px;background:var(--card);border-radius:16px;overflow:hidden;
+  border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.25)}
+
+.band{position:relative;height:104px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.orb{position:absolute;width:22px;height:22px;transform:translate(-50%,-50%);transition:opacity .3s}
+.sun{border-radius:50%;background:radial-gradient(circle,#fff4cf 0 30%,#ffd56a 65%,#ffbf4d);box-shadow:0 0 20px 7px rgba(255,205,100,.45)}
+.moon{overflow:visible;filter:drop-shadow(0 0 6px rgba(220,225,255,.45))}
+.moon .dark-disc{fill:rgba(255,255,255,.10)}
+.moon .lit{fill:#f1f2fa}
+.scene{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
+
+.tabs{position:absolute;top:8px;left:10px;z-index:3;display:flex;gap:2px}
+.tabs button{font:inherit;font-size:10.5px;border:0;background:transparent;color:inherit;opacity:.6;
+  padding:3px 7px;border-radius:999px;cursor:pointer}
+.tabs button:hover{opacity:.9}
+.tabs button[aria-pressed=true]{opacity:1;background:rgba(255,255,255,.28);font-weight:600}
+.band.dark .tabs button[aria-pressed=true]{background:rgba(255,255,255,.16)}
+.tabs button:focus-visible{outline:1.5px solid currentColor;outline-offset:1px}
+
+.info{position:relative;z-index:2;height:100%;display:flex;justify-content:space-between;align-items:flex-end;padding:10px 14px;pointer-events:none}
+.label{font-size:12px;font-weight:600;line-height:1.3}
+.label small{display:block;font-weight:400;opacity:.75;font-size:10.5px}
+.time{font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em;text-align:right}
+.time small{display:block;font-size:10.5px;font-weight:400;opacity:.8;margin-top:3px;letter-spacing:0}
+.band.light{color:#1b2440}
+.band.dark{color:#f4f4fb}
+.band.dark .info{text-shadow:0 1px 3px rgba(0,0,0,.35)}
+.band.light .info{text-shadow:0 0 6px rgba(255,255,255,.35)}
+
+/* Smooth custom slider */
+.controls{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.slider{position:relative;flex:1;height:22px;cursor:pointer;touch-action:none;outline:none;--thumb:var(--ink)}
+.slider .track{position:absolute;left:0;right:0;top:8px;height:6px;border-radius:6px;background:var(--track,var(--line))}
+.slider .rail{position:absolute;left:8px;right:8px;top:0;bottom:0}
+.slider .thumb{position:absolute;top:3px;width:16px;height:16px;margin-left:-8px;border-radius:50%;
+  background:var(--thumb);border:2px solid var(--card);box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(0,0,0,.25);
+  transition:background-color .25s}
+.slider:focus-visible .thumb{box-shadow:0 0 0 3px var(--line),0 1px 3px rgba(0,0,0,.25)}
+.slider.dragging{cursor:grabbing}
+.now{font:inherit;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--ink);
+  padding:4px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.now:hover{background:var(--line)}
+.now:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.band,.orb{transition:none}}
+
+/* Menu bar app: the window is exactly the card, corners stay transparent */
+html,body{background:transparent!important;height:auto;overflow:hidden}
+body{display:block;padding:0}
+.card{max-width:none;width:100%;box-shadow:none;border-color:rgba(127,127,127,.25)}
+html,body,.card{-webkit-user-select:none;user-select:none;cursor:default}
+</style>
+</head>
+<body>
+<main class="card">
+  <section class="band" id="top">
+    <div class="orb sun"></div>
+    <svg class="orb moon" viewBox="0 0 22 22" aria-hidden="true"><circle class="dark-disc" cx="11" cy="11" r="10"/><path class="lit"/></svg>
+    <svg class="scene" viewBox="0 0 300 104" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+    <div class="tabs" role="group" aria-label="Top city">
+      <button type="button" data-tz="Europe/Budapest" data-city="Budapest" data-country="Hungary" data-lat="47.50" data-lon="19.04" data-scene="budapest" aria-pressed="true">Budapest</button>
+      <button type="button" data-tz="Europe/Helsinki" data-city="Helsinki" data-country="Finland" data-lat="60.17" data-lon="24.94" data-scene="helsinki" aria-pressed="false">Helsinki</button>
+      <button type="button" data-tz="America/Los_Angeles" data-city="San Francisco" data-country="USA" data-lat="37.77" data-lon="-122.42" data-scene="sf" aria-pressed="false">San Francisco</button>
+    </div>
+    <div class="info">
+      <div class="label"><span class="c"></span><small class="z"></small></div>
+      <div class="time"><span class="t">--:--</span><small class="d"></small></div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <div class="slider" id="slider" role="slider" tabindex="0" aria-label="Time in the top city"
+      aria-valuemin="0" aria-valuemax="1439" aria-valuenow="0" title="Green = both between 08:00 and 20:00">
+      <div class="track"></div>
+      <div class="rail"><div class="thumb"></div></div>
+    </div>
+    <button type="button" class="now" id="now">Now</button>
+  </div>
+
+  <section class="band" id="bottom">
+    <div class="orb sun"></div>
+    <svg class="orb moon" viewBox="0 0 22 22" aria-hidden="true"><circle class="dark-disc" cx="11" cy="11" r="10"/><path class="lit"/></svg>
+    <svg class="scene" viewBox="0 0 300 104" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+    <div class="tabs" role="group" aria-label="Indonesian time zone">
+      <button type="button" data-tz="Asia/Jakarta" data-city="Jakarta" data-country="Indonesia" data-lat="-6.21" data-lon="106.85" data-scene="jakarta" aria-pressed="false">Jakarta</button>
+      <button type="button" data-tz="Asia/Makassar" data-city="Bali" data-country="Indonesia" data-lat="-8.65" data-lon="115.22" data-scene="bali" aria-pressed="true">Bali</button>
+      <button type="button" data-tz="Asia/Jayapura" data-city="Papua" data-country="Indonesia" data-lat="-2.53" data-lon="140.72" data-scene="papua" aria-pressed="false">Papua</button>
+    </div>
+    <div class="info">
+      <div class="label"><span class="c"></span><small class="z"></small></div>
+      <div class="time"><span class="t">--:--</span><small class="d"></small></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const CALL_FROM=8, CALL_TO=20, FADE=3, STORE="time-bridge-cities";
+  const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const R=Math.random, clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), DEG=180/Math.PI;
+
+  /* ================= time zone helpers (clock changes come from the browser's tz database) ================= */
+  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const fmtCache={};
+  function parts(d,tz){
+    const f=fmtCache[tz]||(fmtCache[tz]=new Intl.DateTimeFormat("en-GB",{timeZone:tz,hour:"2-digit",minute:"2-digit",
+      hourCycle:"h23",weekday:"short",day:"numeric",month:"short",year:"numeric"}));
+    const p={}; f.formatToParts(d).forEach(x=>p[x.type]=x.value); return p;
+  }
+  const key=p=>p.year*10000+MON.indexOf(p.month)*100+(+p.day);
+  const hourOf=(d,tz)=>{const p=parts(d,tz);return +p.hour+p.minute/60};
+  function offset(d,tz){const p=parts(d,tz);return(Date.UTC(+p.year,MON.indexOf(p.month),+p.day,+p.hour,+p.minute)-Math.floor(d/60000)*60000)/60000}
+  const utc=m=>"UTC"+(m>=0?"+":"−")+Math.abs(m/60);
+  const awake=h=>h>=CALL_FROM&&h<CALL_TO;
+  function midnight(instant,tz){ // exact local midnight, also on clock-change days
+    let g=Math.floor(instant/60000)*60000;
+    for(let i=0;i<3;i++){const p=parts(new Date(g),tz),m=+p.hour*60+(+p.minute);if(!m)break;g-=m*60000;}
+    return g;
+  }
+
+  /* ================= sunrise / sunset ================= */
+  const rad=Math.PI/180, sunCache={};
+  function sunTimes(p,lat,lon){
+    const id=key(p)+":"+lat; if(sunCache[id]) return sunCache[id];
+    const jd=Date.UTC(+p.year,MON.indexOf(p.month),+p.day,12)/864e5+2440587.5;
+    const n=Math.round(jd-2451545+0.0008), J=n-lon/360;
+    const M=(357.5291+0.98560028*J)%360;
+    const C=1.9148*Math.sin(M*rad)+0.02*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad);
+    const L=(M+C+180+102.9372)%360;
+    const Jt=2451545+J+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*L*rad);
+    const dec=Math.asin(Math.sin(L*rad)*Math.sin(23.4397*rad));
+    const cw=(Math.sin(-0.833*rad)-Math.sin(lat*rad)*Math.sin(dec))/(Math.cos(lat*rad)*Math.cos(dec));
+    const w=Math.acos(clamp(cw,-1,1))/rad;
+    const toMs=j=>(j-2440587.5)*864e5;
+    return sunCache[id]=[toMs(Jt-w/360),toMs(Jt+w/360)];
+  }
+
+  /* ================= moon phase ================= */
+  function moonPhase(ms){const syn=29.530588853,ref=Date.UTC(2000,0,6,18,14);return(((ms-ref)/864e5/syn)%1+1)%1}
+  function moonPath(ph){
+    const r=10,cx=11,cy=11,k=Math.cos(2*Math.PI*ph),rx=Math.abs(k)*r;
+    if(ph<0.5) return `M${cx} ${cy-r}A${r} ${r} 0 0 1 ${cx} ${cy+r}A${rx} ${r} 0 0 ${k>0?0:1} ${cx} ${cy-r}Z`;
+    return `M${cx} ${cy-r}A${r} ${r} 0 0 0 ${cx} ${cy+r}A${rx} ${r} 0 0 ${k>0?1:0} ${cx} ${cy-r}Z`;
+  }
+
+  /* ================= sky colours ================= */
+  const C={night:["#0b1030","#1a2148"],pre:["#141a40","#2c2a58"],dawn:["#5a6aa8","#f2b08c"],morning:["#7fb4e6","#f6d9b8"],
+    day:["#5fa6e8","#cfe8fb"],day2:["#5fa2e2","#d3e8f8"],golden:["#6f86c4","#f4b98a"],dusk:["#46407a","#de8a78"],late:["#18204e","#2e2c5c"]};
+  function frames(sr,ss){
+    const f=[[0,C.night],[sr-1.2,C.pre],[sr-0.2,C.dawn],[sr+1.3,C.morning],[sr+3.5,C.day],
+      [ss-3,C.day2],[ss-0.4,C.golden],[ss+0.8,C.dusk],[ss+2,C.late],[24,C.night]];
+    for(let i=1;i<f.length;i++) f[i][0]=Math.min(24,Math.max(f[i][0],f[i-1][0]+0.01));
+    return f;
+  }
+  const rgb=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+  const mix=(a,b,t)=>{a=rgb(a);b=rgb(b);return"rgb("+a.map((v,i)=>Math.round(v+(b[i]-v)*t))+")"};
+  function sky(h,sr,ss){const f=frames(sr,ss);
+    for(let i=0;i<f.length-1;i++){const[a,x]=f[i],[b,y]=f[i+1];
+      if(h>=a&&h<=b){const t=(h-a)/(b-a||1);return[mix(x[0],y[0],t),mix(x[1],y[1],t)]}}
+    return C.night;}
+
+  /* ================= animation engine ================= */
+  const anims=new Set(); let raf=0,last=0;
+  function tick(t){
+    const dt=Math.min(0.04,(t-last)/1000); last=t;
+    for(const a of [...anims]) if(!a(dt)) anims.delete(a);
+    raf=anims.size?requestAnimationFrame(tick):0;
+  }
+  function run(fn){anims.add(fn); if(!raf){last=performance.now(); raf=requestAnimationFrame(tick);}}
+
+  const NS="http://www.w3.org/2000/svg";
+  function E(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+  /* ================= shared: colours that dim with the sky (no CSS filters, so motion stays smooth) ================= */
+  const NIGHT_TINT="#141936";
+  const tint=(hex,d)=>mix(hex,NIGHT_TINT,(1-d)*.64);
+  function sceneKit(){
+    const S={dead:false,light:1,lastD:-1,tints:[]};
+    S.TE=(tag,attrs,parent)=>{
+      const e=E(tag,attrs,parent);
+      ["fill","stroke"].forEach(a=>{const v=attrs[a]; if(v&&v[0]==="#"){S.tints.push([e,a,v]); e.setAttribute(a,tint(v,S.light));}});
+      return e;
+    };
+    S.applyLight=d=>{
+      if(Math.abs(d-S.lastD)<.004) return; S.light=S.lastD=d;
+      S.tints=S.tints.filter(([e])=>e.isConnected);
+      S.tints.forEach(([e,a,v])=>e.setAttribute(a,tint(v,d)));
+    };
+    return S;
+  }
+
+  /* ================= BUDAPEST: Parliament (long low facade, tall central dome, all tips rounded) + bird flock ================= */
+  function budapestScene(svg){
+    const S=sceneKit(), TE=S.TE;
+    const jig=E("g",{},svg);
+    const bld=E("g",{},jig), glow=E("g",{},jig);
+    const WALL="#efe2ca",WALL2="#e4d2b3",SHADE="#d9c4a2",ROOF="#bb4a3b",ROOF2="#9e3d30",WIN="#cfb790",LIT="#ffd57a";
+    const soft={"stroke-linejoin":"round","stroke-linecap":"round"};
+    const win=(x,y,w,h)=>{TE("rect",{x,y,width:w,height:h,rx:w/2,fill:WIN},bld);E("rect",{x,y,width:w,height:h,rx:w/2,fill:LIT},glow)};
+    // a steep roof whose tip is rounded off
+    const spireRoof=(x,w,base,tip,c)=>TE("path",{d:`M${x} ${base}C${x+w*.18} ${base-(base-tip)*.55} ${x+w*.42} ${tip+1.2} ${x+w/2} ${tip}C${x+w*.58} ${tip+1.2} ${x+w*.82} ${base-(base-tip)*.55} ${x+w} ${base}Z`,
+      fill:c,stroke:c,"stroke-width":1.6,...soft},bld) && TE("circle",{cx:x+w/2,cy:tip+.9,r:1.15,fill:c},bld);
+    const pin=(x,y,h)=>TE("rect",{x:x-.8,y:y-h,width:1.6,height:h+1,rx:.8,fill:ROOF2},bld);   // little rounded pinnacle
+
+    // long facade
+    TE("rect",{x:103,y:85,width:98,height:22,rx:2.5,fill:WALL2},bld);
+    TE("rect",{x:103,y:93,width:98,height:14,rx:1.5,fill:WALL},bld);
+    TE("rect",{x:102,y:82,width:100,height:4.6,rx:2.3,fill:ROOF},bld);
+    for(let x=107;x<=197;x+=6) if(x<137||x>167) pin(x,82.6,3.2);
+    // wing ends
+    [[102,12],[190,12]].forEach(([x,w])=>{
+      TE("rect",{x,y:79,width:w,height:28,rx:2.5,fill:WALL},bld);
+      spireRoof(x-.4,w+.8,79.6,68,ROOF);
+      win(x+w/2-1,85,2,4.4);
+    });
+    // twin towers either side of the dome
+    [[130,6],[168,6]].forEach(([x,w])=>{
+      TE("rect",{x,y:74,width:w,height:33,rx:2,fill:WALL},bld);
+      spireRoof(x-.4,w+.8,74.6,61,ROOF);
+      TE("circle",{cx:x+w/2,cy:60.4,r:1,fill:ROOF2},bld);
+      win(x+w/2-.9,78,1.8,4);
+    });
+    // drum + tall ribbed dome + slim spire
+    TE("rect",{x:140,y:72,width:24,height:16,rx:3,fill:WALL},bld);
+    TE("rect",{x:138.5,y:70.6,width:27,height:2.8,rx:1.4,fill:SHADE},bld);
+    for(let i=0;i<3;i++) win(144.6+i*6.4,75,2.2,6);
+    TE("path",{d:"M139.5 71.4C139.5 59 145.5 50.5 152 47C158.5 50.5 164.5 59 164.5 71.4Z",fill:ROOF,stroke:ROOF,"stroke-width":1,...soft},bld);
+    TE("path",{d:"M152 47C158.5 50.5 164.5 59 164.5 71.4L152 71.4Z",fill:ROOF2,opacity:.45},bld);
+    TE("path",{d:"M145.6 71.4Q146.6 58 152 47.6M158.4 71.4Q157.4 58 152 47.6",fill:"none",stroke:"#d9705c","stroke-width":.6,opacity:.75,...soft},bld);
+    TE("rect",{x:150.6,y:36,width:2.8,height:12.5,rx:1.4,fill:ROOF2},bld);
+    TE("circle",{cx:152,cy:35,r:1.4,fill:ROOF2},bld);
+    // one calm row of windows along the facade
+    for(let x=108.5;x<197;x+=4.8){ if((x>101&&x<114.5)||(x>129&&x<137)||(x>139&&x<165)||(x>167&&x<175)||x>189) continue; win(x,89.5,1.8,4.2); }
+    for(let x=142.4;x<162;x+=4.8) win(x,92,1.8,4.2);
+
+    let wob=0,wv=0,wobbling=false;
+    S.shake=()=>{
+      wv+=(R()<.5?-1:1)*26; if(wobbling) return; wobbling=true;
+      run(dt=>{ if(S.dead) return false;
+        const K=140,Cd=2*.14*Math.sqrt(K),h=1/240;
+        for(let n=Math.max(1,Math.round(dt/h));n>0;n--){wv+=(-K*wob-Cd*wv)*h; wob+=wv*h;}
+        jig.setAttribute("transform",`translate(152 104) skewX(${wob.toFixed(3)}) translate(-152 -104)`);
+        if(Math.abs(wob)<.01&&Math.abs(wv)<.05){wob=wv=0;jig.removeAttribute("transform");wobbling=false;return false}
+        return true; });
+    };
+
+    let flying=false;
+    S.ambient=()=>{
+      if(flying||S.dead) return; flying=true;
+      const g=E("g",{},svg), n=R()<.5?9:11;
+      const slots=[[0,0]]; for(let i=1;slots.length<n;i++){slots.push([-6*i,-2.5*i]);slots.push([-6*i,2.5*i]);}
+      const flock=slots.slice(0,n).map(([ox,oy])=>({ox:ox+(R()-.5)*1.2,oy:oy+(R()-.5)*1,ph:R()*6.3,sp:9+R()*1.5,
+        el:E("path",{fill:"none","stroke-width":.8,"stroke-linecap":"round","stroke-linejoin":"round"},g)}));
+      const dur=8.5+R()*2, y0=34+R()*3, lift=(R()-.5)*4; let t=0;
+      run(dt=>{
+        t+=dt; const k=t/dur;
+        if(S.dead||k>=1){g.remove();flying=false;return false}
+        const X=-40+380*(k*k*(3-2*k)*.12+k*.88), Y=y0+lift*k+Math.sin(k*Math.PI*2)*1.8;
+        const col=mix("#2a3350","#b8bdd9",1-S.light);
+        flock.forEach(b=>{
+          const amt=.6+.4*Math.sin(t*.7+b.ph), f=Math.sin(t*b.sp+b.ph)*amt;
+          const tipY=(-.3+1.7*f).toFixed(2), ctl=(-1.5-1*f).toFixed(2);
+          b.el.setAttribute("d",`M-3.2 ${tipY}Q-1.5 ${ctl} 0 .3Q1.5 ${ctl} 3.2 ${tipY}`);
+          b.el.setAttribute("stroke",col);
+          b.el.setAttribute("transform",`translate(${(X+b.ox+Math.sin(t*1.1+b.ph)*.6).toFixed(2)} ${(Y+b.oy+Math.sin(t*1.7+b.ph)*.5).toFixed(2)})`);
+        });
+        return true;
+      });
+    };
+
+    S.setLight=d=>{S.applyLight(d); glow.style.opacity=clamp(1-d*1.6,0,1).toFixed(3)};
+    return S;
+  }
+
+  /* ================= INDONESIA: layered jungle silhouettes (+ monkey in Bali) ================= */
+  const FLOWERS={
+    frangipani(g,TE){for(let k=0;k<5;k++)TE("ellipse",{cx:2.4,cy:0,rx:2.6,ry:1.6,fill:"#fff6ea",transform:`rotate(${k*72+12})`},g);
+      TE("circle",{r:1.2,fill:"#ffc94d"},g)},
+    bougain(g,TE){[[-1.5,0,1.8,"#e2569a"],[1.4,.5,1.7,"#f07cb4"],[0,1.8,1.6,"#d84a8f"]].forEach(([x,y,r,c])=>TE("circle",{cx:x,cy:y,r,fill:c},g))},
+    orchid(g,TE){for(let k=0;k<5;k++)TE("ellipse",{cx:2.3,cy:0,rx:2.4,ry:1.25,fill:k%2?"#e0579b":"#cc4489",transform:`rotate(${k*72-90})`},g);
+      TE("circle",{cx:0,cy:.8,r:1.1,fill:"#ffe08a"},g)}
+  };
+  /* swag = vine draped between two points [x1,y1,x2,y2,sag,width];
+     strand = [swag index (-1 = from the top edge), t along the swag or x, length, curl, flower, monkey] */
+  const JUNGLE={
+    bali:{dark:"#1c4632",mid:"#2c6a47",light:"#4e9566",back:"#a9cdb2",vein:"#8fcaa0",flower:"frangipani",taper:true,backOpacity:.36,
+      back_swags:[[-10,-4,170,-4,20,1],[88,-4,320,-4,28,1],[30,-4,230,-4,36,.9],[150,-4,330,-4,46,.9],[-20,-4,110,-4,30,.9]],
+      back_strands:[[0,.62,40],[1,.42,46],[1,.66,18],[2,.3,28],[2,.55,26],[3,.25,18],[4,.6,22]],
+      swags:[[-6,-3,132,-4,3.5,1.3],[136,-4,306,2,24,2.2],[204,-5,308,24,8,1.6],[140,-6,312,-6,6,1.3],[138,-5,244,-4,15,1.5],[230,-6,312,6,5,1.2],[-10,-4,60,-4,19,1.8],[38,-5,128,-4,16,1.8],[96,-5,156,-4,11,1.4]],
+      strands:[[1,.14,54,0,0,1],[1,.22,34,.05,1],[1,.3,20,.06,1],[1,.38,12,0,0,0,1],[1,.46,22,-.05,0,0,1],[1,.62,14],[1,.76,24,.1,0,0,1],[1,.9,16,-.08,1],[2,.4,16],[2,.74,12,0,0,0,1],[4,.3,30,-.06],[4,.48,22,.08,0,0,1],[4,.66,10],[5,.4,14,0,1],[0,.07,46,.04],[0,.17,36,-.03],[0,.33,52,.04,0,0,1],[0,.49,30,-.04,0,0,1],[0,.63,24,.05],[0,.765,40,.03,1],[0,.93,32,-.05,0,0,1],[-2,302,48,.17,0,0,1,14,-1.38],[-2,302,30,.2,1,0,0,27,-1.42],[6,.5,14,0,0,0,1],[7,.48,16,0,1],[8,.55,10]],
+      bigLeaves:[[1,.22,15,72,"dark"],[1,.55,13,112,"mid"],[1,.83,12,64,"dark"],[2,.5,14,84,"light"],[3,.36,12,98,"mid"],[4,.2,13,104,"mid"],[4,.55,14,70,"dark"],[5,.6,12,92,"light"],[3,.7,11,80,"dark"]],
+      corners:[{x:308,y:-10,leaves:[[112,38,"dark"],[136,33,"mid"],[160,26,"dark"],[94,26,"light",-3,10],[150,19,"light",-14,4],[124,22,"mid",-20,14]],fronds:[]}],
+      temple:"gate"},
+    jakarta:{dark:"#263a2a",mid:"#3b5b40",back:"#8aa893",flower:"bougain",
+      back_swags:[[90,-4,260,-4,26,1.2]],
+      back_strands:[[0,.5,24]],
+      swags:[[150,-4,308,-2,24,2],[196,-5,312,14,12,1.6]],
+      strands:[[0,.15,40],[0,.45,22,.1,1],[0,.75,28,-.1],[1,.5,16,0,1]],
+      corner:true, left:false},
+    papua:{dark:"#183a2c",mid:"#285a44",back:"#6fa088",flower:"orchid",fern:true,
+      back_swags:[[70,-4,250,-4,34,1.2],[170,-4,320,-2,40,1.1]],
+      back_strands:[[0,.4,24],[1,.6,30]],
+      swags:[[140,-4,308,-2,26,2.1],[184,-5,312,12,15,1.8]],
+      strands:[[0,.12,44],[0,.4,24,.12,1],[0,.7,32],[1,.45,18,-.1,1]],
+      corner:true, left:true}
+  };
+
+  function vineScene(name){ return function(svg){
+    const spec=JUNGLE[name], S=sceneKit(), TE=S.TE;
+    const root=E("g",{},svg);
+    const leafE=(parent,x,y,ang,s,c)=>{const g=E("g",{transform:`translate(${x} ${y}) rotate(${ang})`},parent);
+      TE("ellipse",{cx:s/2,cy:0,rx:s/2,ry:s*(spec.fern?.22:.34),fill:c},g);
+      if(spec.vein&&s>5) TE("line",{x1:s*.14,y1:0,x2:s*.84,y2:0,stroke:spec.vein,"stroke-width":Math.min(.6,s*.03),"stroke-linecap":"round",opacity:.55},g);
+      return g};
+    const bez=(w,t)=>{const cx=(w.x1+w.x2)/2, cy=(w.y1+w.y2)/2+2*(w.sag+w.off), u=1-t;
+      return {x:u*u*w.x1+2*u*t*cx+t*t*w.x2, y:u*u*w.y1+2*u*t*cy+t*t*w.y2}};
+
+    /* swags (back layer first, so it sits behind) */
+    function makeSwags(list,color,leafy,parent){
+      return list.map(([x1,y1,x2,y2,sag,sw])=>{
+        const w={x1,y1,x2,y2,sag,off:0,ov:0,K:30+R()*12,leaves:[]};
+        w.path=TE("path",{fill:"none",stroke:color,"stroke-width":sw,"stroke-linecap":"round"},parent);
+        if(leafy){ const n=Math.round((x2-x1)/(spec.taper?6.2:8.5));
+          for(let i=1;i<n;i++){const t=i/n+(R()-.5)*.03, side=i%2;
+            const size=spec.taper?(3.2+7*Math.sin(Math.PI*t))*(sw>1.8?1:.75)*(.85+R()*.3):4.2+R()*3;
+            const ang=spec.taper?(side?58+R()*22:122-R()*22):(R()<.5?20+R()*40:140-R()*40);
+            const tone=spec.taper?[spec.dark,spec.mid,spec.light][i%3]:(R()<.5?spec.dark:spec.mid);
+            w.leaves.push({t,el:leafE(parent,0,0,0,size,tone),ang});}}
+        return w;
+      });
+    }
+    function drawSwag(w){
+      const cx=(w.x1+w.x2)/2, cy=(w.y1+w.y2)/2+2*(w.sag+w.off);
+      w.path.setAttribute("d",`M${w.x1} ${w.y1}Q${cx.toFixed(2)} ${cy.toFixed(2)} ${w.x2} ${w.y2}`);
+      w.leaves.forEach(l=>{const p=bez(w,l.t);l.el.setAttribute("transform",`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${l.ang})`)});
+    }
+    const backG=E("g",{opacity:spec.backOpacity||.55},root), frontG=E("g",{},root);
+    const backSwags=makeSwags(spec.back_swags,spec.back,false,backG);
+    const swags=makeSwags(spec.swags,spec.dark,true,frontG);
+
+    /* a few big, natural-looking leaves scattered along the vines */
+    function realLeaf(parent,s,c){
+      const g=E("g",{},parent), p=s*.1;
+      TE("path",{d:`M${p} 0C${s*.24} ${-s*.34} ${s*.64} ${-s*.4} ${s*.9} ${-s*.13}Q${s} 0 ${s*.9} ${s*.13}C${s*.64} ${s*.4} ${s*.24} ${s*.34} ${p} 0Z`,fill:c},g);
+      E("path",{d:`M${p} 0H${s*.97}Q${s*.96} ${s*.07} ${s*.9} ${s*.13}C${s*.64} ${s*.4} ${s*.24} ${s*.34} ${p} 0Z`,fill:"#000",opacity:.13},g);
+      TE("line",{x1:0,y1:0,x2:p+.3,y2:0,stroke:c,"stroke-width":.7,"stroke-linecap":"round"},g);
+      TE("path",{d:`M${p+s*.04} 0Q${s*.5} ${s*.025} ${s*.86} 0`,fill:"none",stroke:spec.vein||"#8fcaa0","stroke-width":.55,"stroke-linecap":"round",opacity:.5},g);
+      for(let k=1;k<4;k++){const x=p+s*k*.2; TE("path",{d:`M${x} 0Q${x+s*.08} ${-s*.12} ${x+s*.16} ${-s*.2}M${x} 0Q${x+s*.08} ${s*.12} ${x+s*.16} ${s*.2}`,fill:"none",stroke:spec.vein||"#8fcaa0","stroke-width":.35,"stroke-linecap":"round",opacity:.35},g);}
+      return g;
+    }
+    (spec.bigLeaves||[]).forEach(([si,t,size,ang,tone])=>{ const w=swags[si]; if(w) w.leaves.push({t,ang,el:realLeaf(frontG,size,spec[tone]||spec.mid)}); });
+
+    /* strands: thin hanging vines that swing (lower segments trail = they bend) */
+    function makeStrand([si,t,len,curl,flower,monkey,tendril,ay,base],list,color,parent,leafy){
+      const n=4, Ls=len/n, groups=[]; let par=parent;
+      for(let i=0;i<n;i++){
+        const g=E("g",{},par); groups.push(g);
+        TE("line",{x1:0,y1:0,x2:0,y2:Ls+.3,stroke:color,"stroke-width":(leafy?1.15:.9)*(1-i/n*.4),"stroke-linecap":"round"},g);
+        if(leafy) leafE(g,0,Ls*.5,i%2?30+R()*15:150-R()*15,(3.4+R()*1.4)*(1-i*.08),i%2?spec.mid:spec.dark);
+        par=g;
+      }
+      const tip=E("g",{transform:`translate(0 ${Ls})`},groups[n-1]);
+      if(leafy){
+        if(flower) FLOWERS[spec.flower](tip,TE);
+        else if(tendril) TE("path",{d:"M0 0C.4 2.6 3.6 3.6 4.4 1.2C5 -.8 3.2 -1.9 2.1 -.8",fill:"none",stroke:color,"stroke-width":.75,"stroke-linecap":"round"},tip);
+        else leafE(tip,0,0,70+R()*40,spec.taper?5.6:4.2,spec.taper?spec.mid:spec.dark); }
+      const v={si,t,list,n,Ls,len,curl:curl||0,ay:ay||0,base:base||0,groups,th:0,om:0,seg:new Array(n).fill(0),held:false,monkey:!!monkey,
+        K:2300/len,x:0,y:0};
+      return v;
+    }
+    const backStrands=spec.back_strands.map(s=>makeStrand(s,backSwags,spec.back,backG,false));
+    const strands=spec.strands.map(s=>makeStrand(s,swags,spec.dark,frontG,true));
+    const allStrands=backStrands.concat(strands);
+
+    function anchor(v){ if(v.si===-2){v.x=v.t;v.y=v.ay} else if(v.si<0){v.x=v.t;v.y=-1} else {const p=bez(v.list[v.si],v.t);v.x=p.x;v.y=p.y-.3} }
+    function applyStrand(v){
+      anchor(v);
+      v.groups.forEach((g,i)=>{
+        const rel=(v.seg[i]-(i?v.seg[i-1]:0)+(i?v.curl:v.base))*DEG;
+        g.setAttribute("transform",i===0?`translate(${v.x.toFixed(2)} ${v.y.toFixed(2)}) rotate(${(-rel).toFixed(3)})`:`translate(0 ${v.Ls}) rotate(${(-rel).toFixed(3)})`);
+      });
+    }
+    function tipPos(v){anchor(v);let x=v.x,y=v.y;for(let i=0;i<v.n;i++){const a=v.base+v.curl*i+v.seg[i];x+=v.Ls*Math.sin(a);y+=v.Ls*Math.cos(a)}
+      return{x,y,a:v.base+v.curl*(v.n-1)+v.seg[v.n-1]}}
+
+    /* leafy corners, like the edge of a jungle clearing */
+    const corners=[];
+    function cluster(x,y,items,parent){
+      const g=E("g",{},parent), c={x,y,g,a:0,av:0};
+      items.forEach(([ang,s,dark,dx=0,dy=0])=>leafE(g,dx,dy,ang,s,dark?spec.dark:spec.mid));
+      corners.push(c); return c;
+    }
+    function frond(parent,x,y,ang,len){                          // fern/palm frond made of round leaflets
+      const g=E("g",{transform:`translate(${x} ${y}) rotate(${ang})`},parent);
+      TE("path",{d:`M0 0Q${len*.5} ${len*.12} ${len} ${len*.32}`,fill:"none",stroke:spec.dark,"stroke-width":1.2,"stroke-linecap":"round"},g);
+      for(let t=.12;t<.96;t+=.1){const px=len*t, py=len*(.24*t*t+.0*t)+len*.12*t*(1-t)*2*0;
+        const s=(1-t*.55)*len*.2;
+        leafE(g,px,py,-62+t*20,s,spec.dark); leafE(g,px,py,62+t*20,s,spec.mid);}
+      return g;
+    }
+    if(spec.corners) spec.corners.forEach(cn=>{
+      const c=cluster(cn.x,cn.y,cn.leaves.map(([a,sz,tone,dx,dy])=>[a,sz,tone==="dark",dx,dy]),frontG);
+      cn.leaves.forEach(([a,sz,tone],i)=>{ if(tone==="light"){ const el=c.g.children[i].firstChild; S.tints.forEach(tt=>{if(tt[0]===el)tt[2]=spec.light}); el.setAttribute("fill",tint(spec.light,S.light)); } });
+      cn.fronds.forEach(([x,y,a,l])=>frond(c.g,x,y,a,l));
+    });
+    if(spec.corner){
+      const c1=cluster(304,-6,[[98,30,1],[122,36,1],[148,28,0],[170,22,1],[112,22,0,-8,3],[136,24,1,-12,8],[92,20,0,-3,16],[160,18,0,-20,2]],frontG);
+      frond(c1.g,-3,18,150,40); frond(c1.g,-10,4,168,34);
+      const c2=cluster(305,26,[[160,18,1],[180,15,0],[140,14,1]],frontG);
+      frond(c2.g,0,0,172,28);
+    }
+    if(spec.left){
+      const c3=cluster(-5,30,[[20,21,1],[42,18,0],[2,16,1],[58,14,1],[30,12,0,2,6]],frontG);
+      frond(c3.g,0,6,14,32);
+      cluster(-4,-6,[[30,12,1],[10,10,0],[50,9,1]],frontG);
+    }
+
+    /* Balinese split gate (candi bentar), small and simple, far in the background */
+    if(spec.temple==="gate"){
+      const tg=E("g",{opacity:.94,transform:"translate(150 104) scale(.95) translate(-150 -104)"},root), lamps=E("g",{},tg);
+      root.insertBefore(tg,root.firstChild);
+      const STONE="#555b52",LEDGE="#353a34",BRICK="#7a4b3f";
+      const rr=(x,y,w,h,c,r)=>TE("rect",{x,y,width:w,height:h,rx:r,fill:c},tg);
+      const half=(inner,dir)=>{
+        const at=w=>dir<0?inner-w:inner;
+        let y=106, w=20;
+        [[22,BRICK],[9,STONE],[8,BRICK],[7,STONE]].forEach(([h,c],i)=>{   // four soft steps
+          rr(at(w),y-h,w,h+1,c,2);
+          rr(at(w+2),y-h-1.4,w+2,2.4,LEDGE,1.2);
+          y-=h+1.4; w-=4.4;
+        });
+        TE("circle",{cx:inner+dir*2.6,cy:y-1.6,r:2.6,fill:STONE},tg);       // round crown
+      };
+      rr(112,99,76,8,LEDGE,2);                                              // low wall
+      half(145.5,-1); half(154.5,1);
+      [[141,97],[159,97]].forEach(([x,y])=>E("circle",{cx:x,cy:y,r:1.2,fill:"#ffd57a"},lamps));
+      S.lamps=lamps;
+    }
+    corners.forEach(c=>c.g.setAttribute("transform",`translate(${c.x} ${c.y})`));
+
+    /* physics */
+    function stepStrand(v,h){
+      const a=v.held? -(520/v.len)*Math.sin(v.th)+.06*v.om : -v.K*v.th-2*.15*Math.sqrt(v.K)*v.om;
+      v.om+=a*h; v.th+=v.om*h;
+      const f=1-Math.exp(-h*15); v.seg[0]=v.th; for(let i=1;i<v.n;i++) v.seg[i]+=(v.seg[i-1]-v.seg[i])*f;
+    }
+    const sMoving=v=>v.held||Math.abs(v.th)>6e-4||Math.abs(v.om)>6e-3||Math.abs(v.seg[v.n-1]-v.seg[0])>6e-4;
+    const wMoving=w=>Math.abs(w.off)>.01||Math.abs(w.ov)>.05;
+    const cMoving=c=>Math.abs(c.a)>.01||Math.abs(c.av)>.05;
+    let physicsOn=false, monkeyOn=false, acc=0;
+    function drawAll(){ backSwags.concat(swags).forEach(drawSwag); allStrands.forEach(applyStrand);
+      corners.forEach(c=>c.g.setAttribute("transform",`translate(${c.x} ${c.y}) rotate(${c.a.toFixed(3)})`)); }
+    function physics(){
+      if(physicsOn) return; physicsOn=true;
+      run(dt=>{ if(S.dead){physicsOn=false;return false}
+        const h=1/240; acc+=dt;
+        while(acc>=h){ acc-=h;
+          backSwags.concat(swags).forEach(w=>{w.ov+=(-w.K*w.off-2*.12*Math.sqrt(w.K)*w.ov)*h; w.off+=w.ov*h;});
+          corners.forEach(c=>{c.av+=(-60*c.a-2*.14*Math.sqrt(60)*c.av)*h; c.a+=c.av*h;});
+          allStrands.forEach(v=>{if(sMoving(v))stepStrand(v,h)});
+        }
+        drawAll();
+        const any=allStrands.some(sMoving)||swags.some(wMoving)||backSwags.some(wMoving)||corners.some(cMoving);
+        if(!any&&!monkeyOn){physicsOn=false;return false} return true; });
+    }
+    drawAll();
+
+    function dropLeaf(x,y){
+      const g=leafE(root,0,0,0,4.2,spec.mid);
+      let t=0, vx=(R()-.5)*12, ph=R()*6;
+      run(dt=>{ t+=dt; if(S.dead||t>3.2){g.remove();return false}
+        x+=(vx+Math.sin(t*3.6+ph)*14)*dt; y+=18*dt;
+        g.setAttribute("transform",`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${(Math.sin(t*3.6+ph)*38+70).toFixed(1)})`);
+        g.setAttribute("opacity",clamp(3.2-t,0,1).toFixed(2)); return true; });
+    }
+
+    function drawMonkey(parent){
+      const g=E("g",{},parent), fur="#7f5236", dark="#62402a", face="#ecc79e";
+      const st=(d,c,w)=>TE("path",{d,fill:"none",stroke:c,"stroke-width":w,"stroke-linecap":"round","stroke-linejoin":"round"},g);
+      st("M-.2 12.6C-5 14 -7.8 10 -6 7.4C-4.8 5.8 -2.9 6.7 -3.6 8.3",fur,1.25);
+      st("M0 0L1.5 6",fur,1.8);
+      TE("ellipse",{cx:2.1,cy:10.6,rx:3.5,ry:4.2,fill:fur},g);
+      TE("ellipse",{cx:2.8,cy:11.3,rx:1.8,ry:2.5,fill:face},g);
+      st("M.9 14.2Q.1 15.9 -.7 16.7",dark,1.5); st("M3.4 14.4Q4 16 4.8 16.7",dark,1.5);
+      st("M4.3 8.3Q5.9 9.9 6.1 12",dark,1.35);
+      TE("circle",{cx:.6,cy:4.1,r:1.25,fill:fur},g); TE("circle",{cx:.6,cy:4.1,r:.62,fill:face},g);
+      TE("circle",{cx:3.2,cy:4.5,r:3.2,fill:fur},g);
+      TE("ellipse",{cx:4.1,cy:5.3,rx:2.15,ry:1.9,fill:face},g);
+      TE("circle",{cx:3.5,cy:4.7,r:.42,fill:"#2a1a10"},g); TE("circle",{cx:4.9,cy:4.7,r:.42,fill:"#2a1a10"},g);
+      st("M3.75 6.2Q4.2 6.6 4.65 6.2",dark,.35);
+      return g;
+    }
+
+    function monkey(){
+      const v=strands.find(x=>x.monkey); if(!v||monkeyOn||S.dead) return;
+      monkeyOn=true; physics();
+      const m=drawMonkey(root), G=430, T=.8, L=v.len;
+      const start={x:-16,y:98}, aim=tipPos(v);
+      const vx=(aim.x-start.x)/T, vy=(aim.y-start.y-.5*G*T*T)/T;
+      let phase="jump", t=0, p={...start}, vel={x:0,y:0}, rot=-.5, spin=0, passes=0, lastOm=0;
+      const place=()=>m.setAttribute("transform",`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${(-rot*DEG).toFixed(2)})`);
+      place();
+      run(dt=>{
+        if(S.dead){m.remove();monkeyOn=false;return false}
+        if(phase==="jump"){
+          t=Math.min(t+dt,T); const k=t/T;
+          p.x=start.x+vx*t; p.y=start.y+vy*t+.5*G*t*t;
+          const tp=tipPos(v); p.x+=(tp.x-aim.x)*k; p.y+=(tp.y-aim.y)*k;
+          rot=-.5+.5*k*k*(3-2*k);
+          if(t>=T){ phase="hold"; v.held=true; v.om+=Math.min(2.6,vx/L); lastOm=v.om;
+            const w=swags[v.si]; if(w) w.ov+=9;                       // the big vine dips under the weight
+            dropLeaf(p.x,p.y); dropLeaf(p.x+2,p.y-7); }
+        } else if(phase==="hold"){
+          const tp=tipPos(v); p.x=tp.x; p.y=tp.y; rot=tp.a; t+=dt;
+          if(Math.sign(v.om)!==Math.sign(lastOm)) passes++; lastOm=v.om;
+          if((passes>=2&&v.th>.7&&v.om>0)||t>T+5){
+            phase="fly"; v.held=false;
+            const a=tp.a, s=L*v.om; vel={x:s*Math.cos(a)+55,y:-s*Math.sin(a)-40}; spin=1.3;
+            const w=swags[v.si]; if(w) w.ov-=6;
+          }
+        } else {
+          vel.y+=G*dt; p.x+=vel.x*dt; p.y+=vel.y*dt; rot+=spin*dt; spin*=.97;
+          if(p.x>335||p.y>150){m.remove();monkeyOn=false;return false}
+        }
+        place(); return true;
+      });
+    }
+
+    S.setLight=d=>{S.applyLight(d); if(S.lamps) S.lamps.style.opacity=clamp(1-d*1.6,0,1).toFixed(3)};
+    S.shake=()=>{
+      allStrands.forEach(v=>{if(!v.held) v.om+=(R()<.5?-1:1)*(.5+R()*.45)*.1*Math.sqrt(v.K)});
+      backSwags.concat(swags).forEach(w=>w.ov+=(R()<.5?-1:1)*(3+R()*3));
+      corners.forEach(c=>c.av+=(R()<.5?-1:1)*(18+R()*12));
+      physics();
+    };
+    S.ambient=name==="bali"?monkey:null;
+    return S;
+  }}
+
+  const SCENES={budapest:budapestScene,jakarta:vineScene("jakarta"),bali:vineScene("bali"),papua:vineScene("papua")};
+
+  /* ================= page ================= */
+  const top=document.getElementById("top"),bottom=document.getElementById("bottom");
+  const pick=el=>el.querySelector('.tabs [aria-pressed="true"]').dataset;
+  let base;
+
+  function mountScene(band){
+    if(band.scene) band.scene.dead=true;
+    const svg=band.querySelector(".scene"); while(svg.firstChild) svg.firstChild.remove();
+    const f=SCENES[pick(band).scene]; band.scene=f?f(svg):null;
+  }
+
+  function paint(el,d,ref){
+    const z=pick(el),p=parts(d,z.tz),h=+p.hour+p.minute/60;
+    const [rise,set]=sunTimes(p,+z.lat,+z.lon), sr=hourOf(new Date(rise),z.tz), ss=hourOf(new Date(set),z.tz);
+    const [t0,b0]=sky(h,sr,ss);
+    el.style.background=`linear-gradient(180deg,${t0},${b0})`;
+    const day=h>=sr+0.6&&h<=ss-0.3; el.classList.toggle("light",day); el.classList.toggle("dark",!day);
+    const W=el.clientWidth,H=el.clientHeight,arc=t=>[W*(.1+.8*t),H*(.8-.55*Math.sin(Math.PI*t))];
+    const sun=el.querySelector(".sun"),moon=el.querySelector(".moon");
+    const st=(h-sr)/(ss-sr);
+    if(st>=0&&st<=1){const[x,y]=arc(st);sun.style.left=x+"px";sun.style.top=y+"px";sun.style.opacity=1}else sun.style.opacity=0;
+    const nightLen=24-(ss-sr), mt=(h>=ss?h-ss:h+24-ss)/nightLen;
+    if(mt>=0&&mt<=1&&!(st>=0&&st<=1)){const[x,y]=arc(mt);moon.style.left=x+"px";moon.style.top=y+"px";moon.style.opacity=1}else moon.style.opacity=0;
+    moon.querySelector(".lit").setAttribute("d",moonPath(moonPhase(+d)));
+    const dayAmt=Math.min(clamp((h-(sr-.8))/1.6,0,1),clamp((ss+.8-h)/1.6,0,1));
+    if(el.scene) el.scene.setLight(dayAmt);
+    el.querySelector(".c").textContent=z.city;
+    el.querySelector(".z").textContent=z.country+" · "+utc(offset(d,z.tz));
+    el.querySelector(".t").textContent=p.hour+":"+p.minute;
+    let rel=""; if(ref){const k=key(p);rel=k>ref?" · next day":k<ref?" · prev day":""}
+    el.querySelector(".d").textContent=`${p.weekday} ${p.day} ${p.month}${rel}`;
+    return p;
+  }
+
+  /* ---------- smooth slider: a critically damped spring chases the pointer ---------- */
+  const sl=document.getElementById("slider"), rail=sl.querySelector(".rail"), thumb=sl.querySelector(".thumb");
+  let val=0, vel=0, mid=0, midV=0, target=0, maxV=1439, springOn=false, dragging=false;
+  const SPRING=160;                                    // higher = snappier, lower = lazier
+  function placeThumb(){thumb.style.left=(val/maxV*100).toFixed(3)+"%"}
+  function goTo(v,instant){
+    target=clamp(v,0,maxV);
+    if(instant||REDUCED){val=mid=target;vel=midV=0;placeThumb();render();return}
+    if(springOn) return; springOn=true;
+    run(dt=>{
+      // two springs in a row: the first chases the pointer, the thumb chases the first.
+      // That gives an S-curve: slow start, fast middle, slow stop, whatever the drag speed.
+      const k=2*Math.sqrt(SPRING), h=1/240;
+      for(let n=Math.max(1,Math.round(dt/h));n>0;n--){
+        midV+=(SPRING*(target-mid)-k*midV)*h; mid+=midV*h;
+        vel+=(SPRING*(mid-val)-k*vel)*h; val+=vel*h;
+      }
+      const done=Math.abs(target-val)<0.05&&Math.abs(vel)<0.3&&Math.abs(midV)<0.3;
+      if(done){val=mid=target;vel=midV=0}
+      placeThumb(); render();
+      if(done&&!dragging){springOn=false;return false}
+      return true;
+    });
+  }
+  const fromX=x=>{const r=rail.getBoundingClientRect();return (x-r.left)/r.width*maxV};
+  sl.addEventListener("pointerdown",e=>{e.preventDefault();sl.focus();dragging=true;sl.classList.add("dragging");
+    sl.setPointerCapture(e.pointerId);goTo(fromX(e.clientX))});
+  sl.addEventListener("pointermove",e=>{if(dragging)goTo(fromX(e.clientX))});
+  const end=()=>{dragging=false;sl.classList.remove("dragging")};
+  sl.addEventListener("pointerup",end); sl.addEventListener("pointercancel",end);
+  sl.addEventListener("keydown",e=>{
+    const step={ArrowRight:5,ArrowUp:5,ArrowLeft:-5,ArrowDown:-5,PageUp:60,PageDown:-60}[e.key];
+    if(step!==undefined){e.preventDefault();goTo(Math.round((target+step)/5)*5)}
+    else if(e.key==="Home"){e.preventDefault();goTo(0)} else if(e.key==="End"){e.preventDefault();goTo(maxV)}
+  });
+
+  // Green = both places between 08:00 and 20:00 local, soft edges
+  function buildTrack(){
+    const cs=getComputedStyle(document.documentElement);
+    const on=cs.getPropertyValue("--call").trim(), off=cs.getPropertyValue("--line").trim();
+    const A=pick(top).tz,B=pick(bottom).tz,len=maxV+1;
+    const okAt=m=>{const d=new Date(base+m*60000);return awake(hourOf(d,A))&&awake(hourOf(d,B))};
+    let prev=okAt(0); const stops=[`${prev?on:off} 0%`];
+    for(let m=5;m<len;m+=5){const ok=okAt(m);
+      if(ok!==prev){const p=m/len*100;
+        stops.push(`${prev?on:off} ${Math.max(0,p-FADE).toFixed(2)}%`,`${ok?on:off} ${Math.min(100,p+FADE).toFixed(2)}%`);prev=ok;}}
+    stops.push(`${prev?on:off} 100%`);
+    sl.style.setProperty("--track",`linear-gradient(90deg,${stops.join(",")})`);
+  }
+
+  // Slider spans the top city's real day (23 or 25 hours on clock-change days)
+  function setBase(instant){
+    const tz=pick(top).tz; base=midnight(+instant,tz);
+    const next=midnight(base+26*3600000,tz); maxV=Math.round((next-base)/60000)-1;
+    sl.setAttribute("aria-valuemax",maxV);
+    val=mid=target=clamp((+instant-base)/60000,0,maxV); vel=midV=0; placeThumb(); buildTrack();
+  }
+  function render(){
+    const d=new Date(base+val*60000),p=paint(top,d);paint(bottom,d,key(p));
+    const ok=awake(hourOf(d,pick(top).tz))&&awake(hourOf(d,pick(bottom).tz));
+    sl.style.setProperty("--thumb",ok?"var(--call)":"var(--ink)");
+    sl.setAttribute("aria-valuenow",Math.round(val));
+    sl.setAttribute("aria-valuetext",`${pick(top).city} ${p.hour}:${p.minute}`);
+  }
+
+  function save(){try{localStorage.setItem(STORE,JSON.stringify([pick(top).tz,pick(bottom).tz]))}catch(e){}}
+  function restore(){try{const v=JSON.parse(localStorage.getItem(STORE)||"null");if(!v)return;
+    [top,bottom].forEach((el,i)=>{const b=el.querySelector(`.tabs [data-tz="${v[i]}"]`);
+      if(b) el.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));});}catch(e){}}
+
+  document.querySelectorAll(".tabs").forEach(g=>g.addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b||b.getAttribute("aria-pressed")==="true") return;
+    const band=g.closest(".band"), instant=new Date(base+val*60000);
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    save(); mountScene(band); setBase(instant); render();
+  }));
+  // tap a layer = the ground shakes a little
+  [top,bottom].forEach(band=>band.addEventListener("click",e=>{
+    if(REDUCED||e.target.closest(".tabs")) return; band.scene&&band.scene.shake&&band.scene.shake();
+  }));
+
+  document.getElementById("now").addEventListener("click",()=>{
+    const n=Date.now(); if(midnight(n,pick(top).tz)===base) goTo((n-base)/60000); else {setBase(new Date());render()}
+  });
+  addEventListener("resize",render);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{buildTrack();render()});
+
+  // ambient moments, roughly twice a minute per layer
+  function ambient(band,first){
+    setTimeout(function go(){
+      if(!REDUCED&&!document.hidden&&band.scene&&band.scene.ambient) band.scene.ambient();
+      setTimeout(go,24000+R()*12000);
+    },first);
+  }
+
+  restore(); mountScene(top); mountScene(bottom); setBase(new Date()); render();
+  ambient(top,3000); ambient(bottom,7500);
+  setInterval(()=>{
+    if(dragging||springOn) return;
+    const n=Date.now(); if(Math.abs(n-(base+val*60000))>6*60000) return;
+    if(midnight(n,pick(top).tz)===base) goTo((n-base)/60000); else {setBase(new Date());render()}
+  },30000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+name: Build Mac app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm install
+
+      # Builds one .dmg that runs on both Apple Silicon and Intel Macs,
+      # and publishes it on the repo's Releases page.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Time Bridge v__VERSION__"
+          releaseBody: |
+            Download **Time Bridge_*.dmg** below, open it and drag Time Bridge into Applications.
+            First launch: right-click the app → Open (it isn't signed with an Apple developer account).
+          releaseDraft: false
+          prerelease: false
+          args: --target universal-apple-darwin
+
+      # Also keep the .dmg as a build artifact (handy if the release step is skipped).
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Time-Bridge-dmg
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
