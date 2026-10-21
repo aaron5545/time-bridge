@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, WindowEvent,
+    AppHandle, Manager, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_positioner::{Position, WindowExt};
@@ -18,10 +18,16 @@ use tauri_plugin_positioner::{Position, WindowExt};
 /// would immediately reopen it.
 struct LastHidden(Mutex<Option<Instant>>);
 
+/// Snap the clock back to the current time (the page follows the real clock from there).
+fn jump_to_now(w: &WebviewWindow) {
+    let _ = w.eval("window.__tbNow && window.__tbNow()");
+}
+
 fn hide_popup(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         if w.is_visible().unwrap_or(false) {
             let _ = w.hide();
+            jump_to_now(&w); // ready at the current time for the next open
             *app.state::<LastHidden>().0.lock().unwrap() = Some(Instant::now());
         }
     }
@@ -43,6 +49,7 @@ fn toggle_popup(app: &AppHandle) {
     if just_hidden {
         return;
     }
+    jump_to_now(&w);
     let _ = w.move_window(Position::TrayBottomCenter);
     let _ = w.show();
     let _ = w.set_focus();

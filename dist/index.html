@@ -77,7 +77,6 @@ html,body,.card{-webkit-user-select:none;user-select:none;cursor:default}
     <div class="tabs" role="group" aria-label="Top city">
       <button type="button" data-tz="Europe/Budapest" data-city="Budapest" data-country="Hungary" data-lat="47.50" data-lon="19.04" data-scene="budapest" aria-pressed="true">Budapest</button>
       <button type="button" data-tz="Europe/Helsinki" data-city="Helsinki" data-country="Finland" data-lat="60.17" data-lon="24.94" data-scene="helsinki" aria-pressed="false">Helsinki</button>
-      <button type="button" data-tz="America/Los_Angeles" data-city="San Francisco" data-country="USA" data-lat="37.77" data-lon="-122.42" data-scene="sf" aria-pressed="false">San Francisco</button>
     </div>
     <div class="info">
       <div class="label"><span class="c"></span><small class="z"></small></div>
@@ -98,10 +97,10 @@ html,body,.card{-webkit-user-select:none;user-select:none;cursor:default}
     <div class="orb sun"></div>
     <svg class="orb moon" viewBox="0 0 22 22" aria-hidden="true"><circle class="dark-disc" cx="11" cy="11" r="10"/><path class="lit"/></svg>
     <svg class="scene" viewBox="0 0 300 104" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
-    <div class="tabs" role="group" aria-label="Indonesian time zone">
-      <button type="button" data-tz="Asia/Jakarta" data-city="Jakarta" data-country="Indonesia" data-lat="-6.21" data-lon="106.85" data-scene="jakarta" aria-pressed="false">Jakarta</button>
+    <div class="tabs" role="group" aria-label="Bottom place">
+      <button type="button" data-tz="Asia/Bangkok" data-city="Thailand" data-country="Bangkok" data-lat="13.75" data-lon="100.50" data-scene="thai" aria-pressed="false">Thailand</button>
       <button type="button" data-tz="Asia/Makassar" data-city="Bali" data-country="Indonesia" data-lat="-8.65" data-lon="115.22" data-scene="bali" aria-pressed="true">Bali</button>
-      <button type="button" data-tz="Asia/Jayapura" data-city="Papua" data-country="Indonesia" data-lat="-2.53" data-lon="140.72" data-scene="papua" aria-pressed="false">Papua</button>
+      <button type="button" data-tz="Asia/Tokyo" data-city="Japan" data-country="Tokyo" data-lat="35.68" data-lon="139.69" data-scene="japan" aria-pressed="false">Japan</button>
     </div>
     <div class="info">
       <div class="label"><span class="c"></span><small class="z"></small></div>
@@ -553,7 +552,388 @@ html,body,.card{-webkit-user-select:none;user-select:none;cursor:default}
     return S;
   }}
 
-  const SCENES={budapest:budapestScene,jakarta:vineScene("jakarta"),bali:vineScene("bali"),papua:vineScene("papua")};
+  /* ================= THAILAND: temple hall + golden chedis + festival flags + sky lanterns ================= */
+  function thaiScene(svg){
+    const S=sceneKit(), TE=S.TE;
+    const ROOF="#c9472f",ROOF2="#a63a28",TRIM="#2f7d6a",GOLD="#e3a632",GOLD2="#bf8420",WALL="#f4ebdb",WALL2="#e6d8bf",SHADE="#d6c3a0",DOOR="#b9832a",WIN="#8d6534",LIT="#ffd57a";
+    const soft={"stroke-linejoin":"round","stroke-linecap":"round"};
+    const back=E("g",{},svg), bld=E("g",{},svg), glow=E("g",{},svg), deco=E("g",{},svg);
+
+    /* faint Wat Arun–style towers far behind (depth) */
+    const prang=(x,base,h,w)=>{
+      const g=E("g",{opacity:.62},back), c="#bea8be", c2="#a68ea5";
+      TE("path",{d:`M${x-w/2} ${base}L${x-w/2} ${base-h*.3}C${x-w*.46} ${base-h*.72} ${x-w*.18} ${base-h*.93} ${x} ${base-h}C${x+w*.18} ${base-h*.93} ${x+w*.46} ${base-h*.72} ${x+w/2} ${base-h*.3}L${x+w/2} ${base}Z`,fill:c,stroke:c,"stroke-width":1.4,...soft},g);
+      for(let k=1;k<5;k++){const y=base-h*(.3+k*.13), ww=w*(1-k*.17); TE("rect",{x:x-ww/2,y:y-.6,width:ww,height:1.2,rx:.6,fill:c2},g);}
+      TE("rect",{x:x-.7,y:base-h-7,width:1.4,height:8,rx:.7,fill:c2},g);
+    };
+    prang(86,108,66,18); prang(222,108,76,20);
+
+    /* golden bell chedi */
+    const chedi=(x,base,s)=>{
+      TE("rect",{x:x-9*s,y:base-4*s,width:18*s,height:4.6*s,rx:1.6*s,fill:GOLD2},bld);
+      TE("rect",{x:x-7*s,y:base-7.2*s,width:14*s,height:3.6*s,rx:1.4*s,fill:GOLD},bld);
+      TE("rect",{x:x-5.4*s,y:base-9.9*s,width:10.8*s,height:3*s,rx:1.2*s,fill:GOLD2},bld);
+      TE("path",{d:`M${x-6*s} ${base-9.6*s}C${x-6*s} ${base-17.5*s} ${x-3.2*s} ${base-21*s} ${x} ${base-21.6*s}C${x+3.2*s} ${base-21*s} ${x+6*s} ${base-17.5*s} ${x+6*s} ${base-9.6*s}Z`,fill:GOLD},bld);
+      TE("path",{d:`M${x} ${base-21.6*s}C${x+3.2*s} ${base-21*s} ${x+6*s} ${base-17.5*s} ${x+6*s} ${base-9.6*s}L${x} ${base-9.6*s}Z`,fill:GOLD2,opacity:.55},bld);
+      TE("rect",{x:x-2.3*s,y:base-24.4*s,width:4.6*s,height:3.2*s,rx:.8*s,fill:GOLD2},bld);
+      TE("path",{d:`M${x-2*s} ${base-24*s}L${x} ${base-39*s}L${x+2*s} ${base-24*s}Z`,fill:GOLD,stroke:GOLD,"stroke-width":1,...soft},bld);
+      for(let k=0;k<5;k++){const y=base-(25.6+k*2.3)*s, hw=(1.75-k*.3)*s; TE("line",{x1:x-hw,y1:y,x2:x+hw,y2:y,stroke:GOLD2,"stroke-width":.55,"stroke-linecap":"round"},bld);}
+      TE("circle",{cx:x,cy:base-39.6*s,r:.9*s,fill:GOLD},bld);
+    };
+    chedi(109,104,1.22); chedi(195,104,1.06);
+
+    /* temple hall (ubosot) */
+    TE("rect",{x:118,y:96.5,width:68,height:9,rx:2,fill:WALL2},bld);                      // podium
+    TE("rect",{x:116,y:95,width:72,height:2.8,rx:1.4,fill:SHADE},bld);
+    TE("rect",{x:126,y:78,width:52,height:18,rx:1.5,fill:WALL},bld);                      // walls
+    [127.2,136.6,165,174.4].forEach(x=>{TE("rect",{x,y:80,width:2.4,height:15.5,rx:1,fill:WALL2},bld);TE("rect",{x:x-.5,y:80,width:3.4,height:1.6,rx:.8,fill:GOLD},bld)});
+    const winAt=(x,y,w,h)=>{TE("rect",{x,y,width:w,height:h,rx:w/2,fill:WIN},bld);E("rect",{x,y,width:w,height:h,rx:w/2,fill:LIT},glow)};
+    [131.4,141,159.6,169.2].forEach(x=>winAt(x,85.5,3.4,6.4));
+    TE("rect",{x:147,y:83,width:10,height:13.5,rx:4.4,fill:DOOR},bld);                       // golden door
+    TE("line",{x1:152,y1:84,x2:152,y2:96.4,stroke:GOLD2,"stroke-width":.6},bld);
+    E("rect",{x:147,y:83,width:10,height:13.5,rx:4.4,fill:LIT},glow);
+    // lower side eaves
+    TE("path",{d:"M117 82L130 70.5L174 70.5L187 82Q152 84 117 82Z",fill:ROOF2,stroke:ROOF2,"stroke-width":1.2,...soft},bld);
+    TE("path",{d:"M117 82Q152 84 187 82",fill:"none",stroke:TRIM,"stroke-width":1.5,...soft},bld);
+    // back gable
+    TE("path",{d:"M125 77L152 45L179 77Z",fill:ROOF2,stroke:ROOF2,"stroke-width":2,...soft},bld);
+    TE("path",{d:"M125 77L152 45L179 77",fill:"none",stroke:TRIM,"stroke-width":1.2,...soft},bld);
+    // front gable: green border, red roof, gold pediment
+    TE("path",{d:"M131 80L152 41L173 80Z",fill:TRIM,stroke:TRIM,"stroke-width":2,...soft},bld);
+    TE("path",{d:"M134.6 78.6L152 46.4L169.4 78.6Z",fill:ROOF,stroke:ROOF,"stroke-width":1.4,...soft},bld);
+    TE("path",{d:"M142 78L152 58.5L162 78Z",fill:GOLD2,stroke:GOLD2,"stroke-width":1.2,...soft},bld);
+    TE("circle",{cx:152,cy:71,r:2.6,fill:GOLD},bld);
+    TE("circle",{cx:152,cy:71,r:1.1,fill:ROOF2},bld);
+    TE("path",{d:"M146 76.4Q152 73.4 158 76.4",fill:"none",stroke:GOLD,"stroke-width":.7,...soft},bld);
+    // gold curls: chofa on the peak, hang hong at the gable and eave ends
+    const curl=(d,w=1.4)=>TE("path",{d,fill:"none",stroke:GOLD,"stroke-width":w,...soft},bld);
+    curl("M152 41.6C152 37.6 150.4 35 148.2 35.2C146.8 35.4 146.6 36.9 147.7 37.4",1.5);
+    curl("M131 80C128.4 79.4 127.6 76.4 129.1 75.1");  curl("M173 80C175.6 79.4 176.4 76.4 174.9 75.1");
+    curl("M117 82C114.6 81.6 113.9 79 115.2 77.9",1.2); curl("M187 82C189.4 81.6 190.1 79 188.8 77.9",1.2);
+
+    /* little gold bells under the eaves: they swing when tapped */
+    const bells=[[120.5,82.6],[183.5,82.6],[132.5,80.6],[171.5,80.6]].map(([x,y])=>{
+      const g=E("g",{transform:`translate(${x} ${y})`},deco);
+      TE("line",{x1:0,y1:0,x2:0,y2:2.4,stroke:GOLD2,"stroke-width":.5,"stroke-linecap":"round"},g);
+      TE("path",{d:"M-1.6 5.4C-1.6 3.2 -.9 2.3 0 2.3C.9 2.3 1.6 3.2 1.6 5.4Z",fill:GOLD,stroke:GOLD,"stroke-width":.5,...soft},g);
+      TE("path",{d:"M0 5.6C-1 6.6 -.9 8.2 0 8.9C.9 8.2 1 6.6 0 5.6Z",fill:GOLD2},g);            // bo-leaf clapper
+      return {g,x,y,a:0,av:0};
+    });
+
+    /* festival flag strings across the top (kept right of the city tabs) */
+    const FLAGS=["#e2ab3d","#c9472f","#2f7d6a","#f4ebdb","#3f72b5"];
+    const strings=[[148,-3,306,-3,12,11],[198,-4,306,17,7,7],[-6,-4,150,-4,2.6,10],[-8,-5,98,-5,8.5,7]].map(([x1,y1,x2,y2,sag,n])=>{
+      const s={x1,y1,x2,y2,sag,off:0,ov:0,K:34+R()*10,flags:[],bulbs:[]};
+      s.line=TE("path",{fill:"none",stroke:"#5b4636","stroke-width":.55,"stroke-linecap":"round"},deco);
+      for(let i=1;i<=n;i++){
+        const t=i/(n+1), col=FLAGS[(i+(x1>170?2:0))%FLAGS.length];
+        const f=E("g",{},deco);
+        TE("path",{d:"M-2.6 0L2.6 0L0 6.2Z",fill:col,stroke:col,"stroke-width":.9,...soft},f);
+        s.flags.push({t,el:f,ph:R()*6.3});
+        if(i<n){const b=E("circle",{r:.8,fill:"#ffe7a3"},glow); s.bulbs.push({t:t+.5/(n+1),el:b});}
+      }
+      return s;
+    });
+    const sPt=(s,t)=>{const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2+2*(s.sag+s.off), u=1-t;
+      return {x:u*u*s.x1+2*u*t*cx+t*t*s.x2, y:u*u*s.y1+2*u*t*cy+t*t*s.y2,
+              a:Math.atan2(2*u*(cy-s.y1)+2*t*(s.y2-cy), 2*u*(cx-s.x1)+2*t*(s.x2-cx))*DEG}};
+    let flutter=0;
+    function drawDeco(time){
+      strings.forEach(s=>{
+        const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2+2*(s.sag+s.off);
+        s.line.setAttribute("d",`M${s.x1} ${s.y1}Q${cx.toFixed(2)} ${cy.toFixed(2)} ${s.x2} ${s.y2}`);
+        s.flags.forEach(f=>{const p=sPt(s,f.t), sw=Math.sin(time*7+f.ph)*flutter*14;
+          f.el.setAttribute("transform",`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${(p.a+sw).toFixed(2)})`)});
+        s.bulbs.forEach(b=>{const p=sPt(s,b.t); b.el.setAttribute("cx",p.x.toFixed(2)); b.el.setAttribute("cy",(p.y+.3).toFixed(2))});
+      });
+      bells.forEach(b=>b.g.setAttribute("transform",`translate(${b.x} ${b.y}) rotate(${b.a.toFixed(2)})`));
+    }
+    drawDeco(0);
+
+    let moving=false, acc=0, clock=0;
+    function animate(){
+      if(moving) return; moving=true;
+      run(dt=>{ if(S.dead){moving=false;return false}
+        const h=1/240; acc+=dt; clock+=dt;
+        while(acc>=h){ acc-=h;
+          strings.forEach(s=>{s.ov+=(-s.K*s.off-2*.12*Math.sqrt(s.K)*s.ov)*h; s.off+=s.ov*h;});
+          bells.forEach(b=>{b.av+=(-55*b.a-2*.08*Math.sqrt(55)*b.av)*h; b.a+=b.av*h;});
+          flutter*=Math.exp(-h*1.6);
+        }
+        drawDeco(clock);
+        const still=strings.every(s=>Math.abs(s.off)<.01&&Math.abs(s.ov)<.05)&&bells.every(b=>Math.abs(b.a)<.05&&Math.abs(b.av)<.2)&&flutter<.01;
+        if(still){strings.forEach(s=>{s.off=s.ov=0});bells.forEach(b=>{b.a=b.av=0});flutter=0;drawDeco(clock);moving=false;return false}
+        return true; });
+    }
+    S.shake=()=>{
+      bells.forEach(b=>b.av+=(R()<.5?-1:1)*(140+R()*80));
+      strings.forEach(s=>s.ov+=(R()<.5?-1:1)*(3.5+R()*3));
+      flutter=Math.min(1,flutter+.8);
+      animate();
+    };
+
+    /* Yi Peng sky lanterns drifting up */
+    let floating=false;
+    S.ambient=()=>{
+      if(floating||S.dead) return; floating=true;
+      const n=4+Math.floor(R()*3), lg=E("g",{},svg); let alive=n;
+      if(!svg.querySelector("#lanternGlow")){const df=E("defs",{},svg), rg=E("radialGradient",{id:"lanternGlow"},df);
+        E("stop",{offset:"0","stop-color":"#ffcf7a","stop-opacity":".9"},rg); E("stop",{offset:".45","stop-color":"#ffb24d","stop-opacity":".35"},rg); E("stop",{offset:"1","stop-color":"#ffb24d","stop-opacity":"0"},rg);}
+      for(let i=0;i<n;i++){
+        const L={x:60+R()*180, y:112, delay:i*.55+R()*.5, dur:10+R()*3, ph:R()*6.3, drift:(R()-.5)*30, t:0};
+        const g=E("g",{opacity:0},lg);
+        const halo=E("circle",{r:11,fill:"url(#lanternGlow)",opacity:0},g);
+        E("path",{d:"M-3 -4.6Q-3.3 -5.3 -2.6 -5.4L2.6 -5.4Q3.3 -5.3 3 -4.6L2.2 3.9Q2 4.6 1.3 4.6L-1.3 4.6Q-2 4.6 -2.2 3.9Z",fill:"#f7d9a6"},g);
+        E("path",{d:"M-2.4 .8L2.4 .8L2.2 3.9Q2 4.6 1.3 4.6L-1.3 4.6Q-2 4.6 -2.2 3.9Z",fill:"#ffb24d",opacity:.75},g);
+        E("circle",{cy:4.4,r:.8,fill:"#fff2bf"},g);
+        run(dt=>{
+          if(S.dead){lg.remove();floating=false;return false}
+          L.t+=dt; const k=(L.t-L.delay)/L.dur;
+          if(k<0) return true;
+          if(k>=1){g.remove(); if(--alive===0){lg.remove();floating=false} return false}
+          const e=1-Math.pow(1-k,1.6), sc=1.25-.6*e;
+          const x=L.x+L.drift*e+Math.sin(L.t*1.1+L.ph)*2.6, y=L.y-138*e;
+          g.setAttribute("transform",`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${(Math.sin(L.t*1.3+L.ph)*5).toFixed(2)}) scale(${sc.toFixed(3)})`);
+          g.setAttribute("opacity",(Math.min(1,k*8)*Math.min(1,(1-k)*4)).toFixed(3));
+          halo.setAttribute("opacity",((1-S.light)*.95+.12).toFixed(3));
+          return true;
+        });
+      }
+    };
+
+    S.setLight=d=>{S.applyLight(d); glow.style.opacity=clamp(1-d*1.6,0,1).toFixed(3); back.style.opacity=(.35+.65*d).toFixed(3)};
+    return S;
+  }
+
+  /* ================= JAPAN: torii gate framing Mt Fuji + stone lanterns + sakura branches + petal gusts ================= */
+  function japanScene(svg){
+    const S=sceneKit(), TE=S.TE;
+    const VERM="#d4442e",VERM2="#ad3423",INK="#2b2627",GOLD="#d8a842",STONE="#a39e94",STONE2="#878279",LIT="#ffd57a";
+    const PINK="#f7c4d1",PINK2="#efa2b8",HEART="#d65a7f",BARK="#5b4438";
+    const soft={"stroke-linejoin":"round","stroke-linecap":"round"};
+    const back=E("g",{},svg), bld=E("g",{},svg), glow=E("g",{},svg), tree=E("g",{},svg), fx=E("g",{},svg);
+
+    /* Mt Fuji far behind, framed by the gate opening */
+    TE("path",{d:"M92 106C118 99 135 87 144.6 79.4Q152 74.4 159.4 79.4C169 87 186 99 212 106Z",fill:"#9fb3d1",stroke:"#9fb3d1","stroke-width":1.4,...soft},back);
+    TE("path",{d:"M152 75.4Q156 77 159.4 79.4L170 89C164 88.6 161 90 157.8 87.6C155 90.2 153.4 88.4 152 89.6Z",fill:"#8aa0c2",opacity:.6},back);
+    TE("path",{d:"M144.6 79.4Q152 74.4 159.4 79.4L157.6 82.6L155.4 80.8L153.4 83.6L151.2 81.2L149 83.4L147 81.4L145.4 82.8Z",fill:"#f4f6fb",stroke:"#f4f6fb","stroke-width":1,...soft},back);
+    /* stone lanterns (tōrō) */
+    const toro=(x)=>{
+      TE("rect",{x:x-6,y:100,width:12,height:5,rx:1.6,fill:STONE2},bld);
+      TE("rect",{x:x-2,y:89,width:4,height:11.5,rx:1.2,fill:STONE},bld);
+      TE("rect",{x:x-5.4,y:86.6,width:10.8,height:3,rx:1.2,fill:STONE2},bld);
+      TE("rect",{x:x-4,y:79.6,width:8,height:7.4,rx:1.2,fill:STONE},bld);
+      TE("rect",{x:x-2,y:81.3,width:4,height:4,rx:1,fill:"#5d574f"},bld);
+      E("rect",{x:x-2,y:81.3,width:4,height:4,rx:1,fill:LIT},glow);
+      TE("path",{d:`M${x-7.4} 80.2Q${x} 77.4 ${x+7.4} 80.2L${x+4.4} 76.4Q${x} 74.6 ${x-4.4} 76.4Z`,fill:STONE2,stroke:STONE2,"stroke-width":1,...soft},bld);
+      TE("circle",{cx:x,cy:74.2,r:1.6,fill:STONE},bld);
+    };
+    toro(110); toro(194);
+
+    /* the torii */
+    [[123.6,"l"],[175,"r"]].forEach(([x])=>{
+      TE("rect",{x,y:62,width:5.8,height:43,rx:1.6,fill:VERM},bld);                 // pillar
+      TE("rect",{x:x+3.4,y:62,width:2.4,height:43,rx:1.1,fill:VERM2,opacity:.55},bld);
+      TE("rect",{x:x-.8,y:98.6,width:7.4,height:6.4,rx:1.6,fill:INK},bld);          // black base sleeve
+    });
+    TE("rect",{x:113.5,y:66.4,width:77,height:4.2,rx:2,fill:VERM},bld);              // nuki (lower beam)
+    TE("rect",{x:149.6,y:52.5,width:4.8,height:14.4,rx:1.2,fill:VERM},bld);          // centre strut
+    TE("rect",{x:116,y:50.4,width:72,height:3.8,rx:1.6,fill:VERM2},bld);             // shimaki
+    TE("rect",{x:146.4,y:54.4,width:11.2,height:9.6,rx:1.4,fill:INK,stroke:GOLD,"stroke-width":.6},bld); // plaque
+    [57.6,60.6].forEach(y=>TE("rect",{x:150.2,y,width:3.6,height:1.1,rx:.55,fill:GOLD},bld));
+    TE("path",{d:"M105 44.6Q152 52.4 199 44.6L198 49.8Q152 56.6 106 49.8Z",fill:VERM,stroke:VERM,"stroke-width":1.4,...soft},bld); // kasagi
+    TE("path",{d:"M103.4 42.6Q152 50.6 200.6 42.6L200 45.6Q152 53.2 104 45.6Z",fill:INK,stroke:INK,"stroke-width":1.4,...soft},bld); // black top
+
+    /* sakura branches from the top (right of the tabs) */
+    const branches=[];
+    function blossom(parent,x,y,s){
+      const g=E("g",{transform:`translate(${x} ${y}) rotate(${(R()*72).toFixed(1)})`},parent), c=R()<.5?PINK:PINK2;
+      for(let k=0;k<5;k++) TE("ellipse",{cx:0,cy:-s*.55,rx:s*.42,ry:s*.55,fill:c,transform:`rotate(${k*72})`},g);
+      TE("circle",{r:s*.24,fill:HEART},g);
+      return [x,y];
+    }
+    function branch(ax,ay,limbs,clusters){
+      const g=E("g",{},tree), spots=[];
+      limbs.forEach(([d,w])=>TE("path",{d,fill:"none",stroke:BARK,"stroke-width":w,...soft},g));
+      clusters.forEach(([x,y,n])=>{for(let i=0;i<n;i++) spots.push(blossom(g,x+(R()-.5)*7,y+(R()-.5)*5,2.2+R()*1.3));});
+      const b={g,ax,ay,a:0,av:0,spots}; branches.push(b); return b;
+    }
+    branch(306,-3,[["M306 -2C284 3 262 7 238 17",2.2],["M276 2C268 10 263 17 259 25",1.4],["M252 11C246 13 240 12 234 9",1.1],["M292 0C291 6 293 11 297 15",1.1]],
+      [[240,16,5],[258,24,5],[234,9,3],[268,8,4],[296,15,4],[284,4,3],[250,12,3]]);
+    branch(166,-4,[["M166 -4C172 4 182 8 194 9",1.6],["M180 6C181 11 179 15 176 18",1]],
+      [[194,9,4],[176,18,3],[184,6,3]]);
+    branch(-6,-3,[["M-6 -2C14 1 34 2 58 0",1.6],["M30 1C34 4 40 5 46 4",1]],
+      [[58,0,3],[44,4,3],[20,1,3]]);
+    branch(-6,35,[["M-6 35C14 36 32 40 52 48",2],["M22 37C28 34 36 33 44 34",1.3],["M36 43C38 48 37 52 34 55",1.1]],
+      [[52,48,5],[44,34,4],[34,55,3],[24,39,3],[8,36,3]]);
+    const drawBranches=()=>branches.forEach(b=>b.g.setAttribute("transform",`rotate(${b.a.toFixed(3)} ${b.ax} ${b.ay})`));
+
+    /* falling / blowing petals */
+    const petal=()=>{const g=E("g",{},fx); TE("path",{d:"M0 0C1.1 -1.5 3 -1.4 3.5 -.2L2.9 0L3.5 .2C3 1.4 1.1 1.5 0 0Z",fill:R()<.5?PINK:PINK2},g); return g};
+    function fall(x,y){
+      const g=petal(); let t=0; const ph=R()*6.3, vx=(R()-.5)*10;
+      run(dt=>{ t+=dt; if(S.dead||t>4.5||y>112){g.remove();return false}
+        x+=(vx+Math.sin(t*2.6+ph)*12)*dt; y+=(15+Math.sin(t*5+ph)*4)*dt;
+        g.setAttribute("transform",`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${(t*160+ph*57).toFixed(1)}) scale(${(.8+.3*Math.sin(t*6+ph)).toFixed(2)} 1)`);
+        g.setAttribute("opacity",clamp(4.5-t,0,1).toFixed(2)); return true; });
+    }
+
+    let moving=false, acc=0;
+    function animate(){
+      if(moving) return; moving=true;
+      run(dt=>{ if(S.dead){moving=false;return false}
+        const h=1/240; acc+=dt;
+        while(acc>=h){acc-=h; branches.forEach(b=>{b.av+=(-38*b.a-2*.1*Math.sqrt(38)*b.av)*h; b.a+=b.av*h;});}
+        drawBranches();
+        if(branches.every(b=>Math.abs(b.a)<.01&&Math.abs(b.av)<.05)){branches.forEach(b=>{b.a=b.av=0});drawBranches();moving=false;return false}
+        return true; });
+    }
+    S.shake=()=>{
+      branches.forEach(b=>b.av+=(R()<.5?-1:1)*(14+R()*8));
+      animate();
+      for(let i=0;i<6;i++){const b=branches[i%2===0?0:Math.floor(R()*branches.length)], sp=b.spots[Math.floor(R()*b.spots.length)];
+        setTimeout(()=>{if(!S.dead) fall(sp[0],sp[1])},i*90);}
+    };
+
+    /* a gust of petals blowing across */
+    let gusting=false;
+    S.ambient=()=>{
+      if(gusting||S.dead) return; gusting=true;
+      branches.forEach(b=>b.av+=8+R()*5); animate();
+      const n=22; let alive=n;
+      for(let i=0;i<n;i++){
+        const g=petal(); g.setAttribute("opacity",0);
+        const P={x:-12-R()*40, y:8+R()*70, vx:62+R()*30, ph:R()*6.3, amp:4+R()*6, delay:i*.12+R()*.6, t:0};
+        run(dt=>{
+          if(S.dead){g.remove();if(--alive===0)gusting=false;return false}
+          P.t+=dt; if(P.t<P.delay) return true; const t=P.t-P.delay;
+          P.x+=P.vx*dt; const y=P.y+Math.sin(t*2.2+P.ph)*P.amp+t*6;
+          g.setAttribute("transform",`translate(${P.x.toFixed(2)} ${y.toFixed(2)}) rotate(${(t*220+P.ph*57).toFixed(1)}) scale(${(.75+.35*Math.sin(t*7+P.ph)).toFixed(2)} 1)`);
+          g.setAttribute("opacity",Math.min(1,t*3).toFixed(2));
+          if(P.x>320){g.remove(); if(--alive===0) gusting=false; return false}
+          return true;
+        });
+      }
+    };
+
+    S.setLight=d=>{S.applyLight(d); glow.style.opacity=clamp(1-d*1.6,0,1).toFixed(3); back.style.opacity=(.3+.6*d).toFixed(3)};
+    return S;
+  }
+
+  /* ================= HELSINKI: white cathedral with green domes + seagulls (and snow in winter) ================= */
+  function helsinkiScene(svg){
+    const S=sceneKit(), TE=S.TE;
+    const WHITE="#f4f5f2",WHITE2="#dce2df",SHADE="#c1cac6",DOME="#4f9a87",DOME2="#3d7f6e",ZINC="#7f9c95",GOLD="#d9b04c",WIN="#9fb0ad",LIT="#ffd57a";
+    const soft={"stroke-linejoin":"round","stroke-linecap":"round"};
+    const low=E("g",{transform:"translate(0 4.5)"},svg), jig=E("g",{},low), bld=E("g",{},jig), glow=E("g",{},jig), fx=E("g",{},svg);
+    const win=(x,y,w,h)=>{TE("rect",{x,y,width:w,height:h,rx:w/2,fill:WIN},bld);E("rect",{x,y,width:w,height:h,rx:w/2,fill:LIT},glow)};
+    const dome=(cx,base,w,h,lantern)=>{
+      TE("path",{d:`M${cx-w/2} ${base}C${cx-w/2} ${base-h*.62} ${cx-w*.27} ${base-h} ${cx} ${base-h}C${cx+w*.27} ${base-h} ${cx+w/2} ${base-h*.62} ${cx+w/2} ${base}Z`,fill:DOME},bld);
+      TE("path",{d:`M${cx} ${base-h}C${cx+w*.27} ${base-h} ${cx+w/2} ${base-h*.62} ${cx+w/2} ${base}L${cx} ${base}Z`,fill:DOME2,opacity:.55},bld);
+      const lw=w*.16, lh=lantern;
+      TE("rect",{x:cx-lw/2,y:base-h-lh+.6,width:lw,height:lh,rx:lw*.3,fill:WHITE},bld);
+      TE("path",{d:`M${cx-lw*.8} ${base-h-lh+1}Q${cx} ${base-h-lh-lw*.9} ${cx+lw*.8} ${base-h-lh+1}Z`,fill:DOME},bld);
+      TE("circle",{cx,cy:base-h-lh-lw*.75,r:Math.max(.7,lw*.28),fill:GOLD},bld);
+    };
+
+    // wide granite steps of Senate Square
+    TE("rect",{x:100,y:100.5,width:104,height:6,rx:1.6,fill:SHADE},bld);
+    TE("rect",{x:107,y:97.4,width:90,height:4,rx:1.4,fill:WHITE2},bld);
+    TE("rect",{x:113,y:94.4,width:78,height:4,rx:1.4,fill:SHADE},bld);
+    // main block
+    TE("rect",{x:119,y:64,width:66,height:31,rx:2,fill:WHITE},bld);
+    TE("rect",{x:119,y:64,width:66,height:3,rx:1.2,fill:WHITE2},bld);
+    TE("rect",{x:119,y:92.4,width:66,height:2.6,rx:1,fill:SHADE,opacity:.7},bld);
+    [[123,72],[178.6,72],[123,83],[178.6,83]].forEach(([x,y])=>win(x,y,2.4,5.4));
+    // corner towers with small domes
+    [[124,10],[180,10]].forEach(([cx,w])=>{
+      TE("rect",{x:cx-w/2,y:54,width:w,height:11,rx:1.6,fill:WHITE},bld);
+      win(cx-1,57.4,2,4.4);
+      dome(cx,54.6,w+1,7.4,3);
+    });
+    // drum + main dome
+    TE("rect",{x:139.5,y:44,width:25,height:21,rx:2,fill:WHITE},bld);
+    TE("rect",{x:138,y:42.6,width:28,height:2.6,rx:1.3,fill:WHITE2},bld);
+    for(let i=0;i<4;i++){const x=143+i*6; TE("rect",{x:x-.5,y:46,width:1,height:17,rx:.5,fill:WHITE2},bld); if(i<3) win(x+1.8,49,2.4,7);}
+    dome(152,43.4,27,17.5,5.2);
+    // portico: pediment on six columns, zinc apostles on top
+    TE("rect",{x:131,y:70.6,width:42,height:24,rx:1,fill:SHADE},bld);                          // shadow behind columns
+    for(let i=0;i<6;i++){const x=134.5+i*7-1.7; TE("rect",{x,y:71,width:3.4,height:23.6,rx:1.2,fill:WHITE},bld); TE("rect",{x:x-.6,y:70.4,width:4.6,height:1.4,rx:.7,fill:WHITE2},bld);}
+    E("rect",{x:149.6,y:80,width:4.8,height:14,rx:2.2,fill:LIT,opacity:.9},glow);               // warm doorway at night
+    TE("rect",{x:129.4,y:66.6,width:45.2,height:4.2,rx:1.4,fill:WHITE2},bld);                  // entablature
+    TE("path",{d:"M128.6 67.2L152 57.2L175.4 67.2Z",fill:WHITE,stroke:WHITE,"stroke-width":1.6,...soft},bld);
+    TE("path",{d:"M134 66L152 58.6L170 66",fill:"none",stroke:SHADE,"stroke-width":.6,...soft},bld);
+    const apostle=(x,y,s=1)=>{TE("rect",{x:x-.9*s,y:y-3.4*s,width:1.8*s,height:3.6*s,rx:.8*s,fill:ZINC},bld);TE("circle",{cx:x,cy:y-4*s,r:.85*s,fill:ZINC},bld)};
+    apostle(129.6,67); apostle(174.4,67); apostle(152,57.6,1.1);
+    [121.5,127,177,182.5].forEach(x=>apostle(x,64.4,.9));
+
+    let wob=0,wv=0,wobbling=false;
+    S.shake=()=>{
+      wv+=(R()<.5?-1:1)*26; if(wobbling) return; wobbling=true;
+      run(dt=>{ if(S.dead) return false;
+        const K=140,Cd=2*.14*Math.sqrt(K),h=1/240;
+        for(let n=Math.max(1,Math.round(dt/h));n>0;n--){wv+=(-K*wob-Cd*wv)*h; wob+=wv*h;}
+        jig.setAttribute("transform",`translate(152 104) skewX(${wob.toFixed(3)}) translate(-152 -104)`);
+        if(Math.abs(wob)<.01&&Math.abs(wv)<.05){wob=wv=0;jig.removeAttribute("transform");wobbling=false;return false}
+        return true; });
+    };
+
+    /* seagulls gliding across: long soaring arcs with the odd lazy flap */
+    function gulls(){
+      const n=2+Math.floor(R()*2), g=E("g",{},fx), dir=R()<.5?1:-1;
+      const list=Array.from({length:n},(_,i)=>{
+        const el=E("g",{},g);
+        const wing=E("path",{fill:"none","stroke-width":1.1,"stroke-linecap":"round","stroke-linejoin":"round"},el);
+        const tips=E("path",{fill:"none","stroke-width":1.15,"stroke-linecap":"round"},el);
+        const body=E("ellipse",{cx:0,cy:.5,rx:1.5,ry:.75},el);
+        return {el,wing,tips,body,ox:-i*(16+R()*10),oy:(R()-.5)*14,ph:R()*6.3,flapAt:1+R()*2,scale:.9+R()*.35};
+      });
+      const dur=11+R()*3, y0=33+R()*9; let t=0;
+      run(dt=>{
+        t+=dt; const k=t/dur; if(S.dead||k>=1){g.remove();return k<1?false:(endGulls(),false)}
+        const night=1-S.light, wingC=mix("#ffffff","#c7cbe0",night), tipC=mix("#3a3f4a","#9ba1bb",night);
+        list.forEach(b=>{
+          const X=dir>0?(-30+380*k+b.ox):(330-380*k-b.ox);
+          const Y=y0+b.oy+Math.sin(t*.55+b.ph)*5;
+          const lt=(t+b.ph)%4; const flap=lt<b.flapAt?Math.sin(lt/b.flapAt*Math.PI*3)*.9:0;  // a few flaps, then a long glide
+          const up=-1.6-flap*1.6, tip=.9+flap*1.4;
+          b.wing.setAttribute("d",`M-6 ${tip.toFixed(2)}Q-3.4 ${up.toFixed(2)} -.4 .4M.4 .4Q3.4 ${up.toFixed(2)} 6 ${tip.toFixed(2)}`);
+          b.tips.setAttribute("d",`M-6 ${tip.toFixed(2)}L-4.8 ${(tip-.7).toFixed(2)}M6 ${tip.toFixed(2)}L4.8 ${(tip-.7).toFixed(2)}`);
+          b.wing.setAttribute("stroke",wingC); b.tips.setAttribute("stroke",tipC); b.body.setAttribute("fill",wingC);
+          b.el.setAttribute("transform",`translate(${X.toFixed(2)} ${Y.toFixed(2)}) rotate(${(Math.sin(t*.55+b.ph)*6*dir).toFixed(2)}) scale(${(b.scale*dir).toFixed(3)} ${b.scale.toFixed(3)})`);
+        });
+        return true;
+      });
+    }
+    /* light snow flurry, only in the snowy months */
+    function snow(){
+      const g=E("g",{},fx), n=34; let alive=n;
+      for(let i=0;i<n;i++){
+        const f={x:R()*320-10, y:-6-R()*30, vy:9+R()*7, ph:R()*6.3, r:.55+R()*.75, delay:R()*5, t:0};
+        const c=E("circle",{r:f.r,fill:"#ffffff",opacity:0},g);
+        run(dt=>{
+          if(S.dead){g.remove();return false}
+          f.t+=dt; if(f.t<f.delay) return true; const t=f.t-f.delay;
+          f.y+=f.vy*dt; const x=f.x+Math.sin(t*1.3+f.ph)*4;
+          c.setAttribute("cx",x.toFixed(2)); c.setAttribute("cy",f.y.toFixed(2));
+          c.setAttribute("opacity",(Math.min(1,t*2)*.9).toFixed(2));
+          if(f.y>110){c.remove(); if(--alive===0){g.remove();endGulls()} return false}
+          return true;
+        });
+      }
+    }
+    let busy=false; const endGulls=()=>{busy=false};
+    S.ambient=()=>{
+      if(busy||S.dead) return; busy=true;
+      const m=new Date().getMonth(), winter=m>=10||m<=2;      // Nov – Mar
+      if(winter&&R()<.5) snow(); else gulls();
+    };
+
+    S.setLight=d=>{S.applyLight(d); glow.style.opacity=clamp(1-d*1.6,0,1).toFixed(3)};
+    return S;
+  }
+
+  const SCENES={budapest:budapestScene,helsinki:helsinkiScene,bali:vineScene("bali"),thai:thaiScene,japan:japanScene};
 
   /* ================= page ================= */
   const top=document.getElementById("top"),bottom=document.getElementById("bottom");
@@ -684,6 +1064,7 @@ html,body,.card{-webkit-user-select:none;user-select:none;cursor:default}
     },first);
   }
 
+  window.__tbNow=()=>{dragging=false; setBase(new Date()); render();};
   restore(); mountScene(top); mountScene(bottom); setBase(new Date()); render();
   ambient(top,3000); ambient(bottom,7500);
   setInterval(()=>{

@@ -1,8 +1,8 @@
 # Time Bridge
 
-A menu bar clock for Budapest ↔ Bali (plus Helsinki, San Francisco, Jakarta and Papua).
+A menu bar clock for Budapest ↔ Bali (plus Helsinki, Thailand and Japan).
 
-- **Left-click** the icon in the menu bar → the clock drops down under it.
+- **Left-click** the icon in the menu bar → the clock drops down under it, always at the current time.
 - **Click anywhere else** → it tucks away.
 - **Right-click** the icon → *Open at Login* and *Quit*.
 
