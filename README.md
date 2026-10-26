@@ -15,3 +15,7 @@ A menu bar clock for Budapest ↔ Bali (plus Helsinki, Thailand and Japan).
 ## Changing the clock
 The whole clock is `dist/index.html`. Edit it, bump `version` in `src-tauri/tauri.conf.json`,
 push to `main`, and GitHub builds a new `.dmg` automatically.
+
+## iPhone
+The `docs/` folder is the same clock as a home-screen web app (GitHub Pages).
+Open the Pages link in Safari → Share → **Add to Home Screen**.
